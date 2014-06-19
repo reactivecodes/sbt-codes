@@ -1,4 +1,4 @@
-sbt-sbs
+sbt-codes
 =======
 Simple plug-in for uniform configuration of *Reactive Codes*  [sbt][1] projects.
 

@@ -31,6 +31,8 @@ pomExtra <<= pomExtra(_ ++ developers)
 
 scalacOptions in Compile += Opts.compile.deprecation
 
+publish <<= PgpKeys.publishSigned
+
 addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
 
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.12.1")

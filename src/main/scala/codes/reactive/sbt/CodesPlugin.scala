@@ -87,13 +87,20 @@ object CodesPlugin extends AutoPlugin {
 
     lazy val publishOSS: Setting[Option[Resolver]] = CodesPlugin.publishOSS
 
+    def publishOSS(reference: Reference) = CodesPlugin.publishOSS(reference)
+
     lazy val apacheLicensed: Setting[Seq[(String, URL)]] = CodesPlugin.apacheLicensed
+
+    def apacheLicensed(reference: Reference) = CodesPlugin.apacheLicensed(reference)
 
     lazy val codesCompileOpts = CodesPlugin.compileOpts
 
+    def codesCompileOpts(reference: Reference) = CodesPlugin.compileOpts(reference)
   }
 
-  val autoImport = new Import with Keys {}
+  object AutoImport extends Import with Keys
+
+  val autoImport = AutoImport
 
   import autoImport._
 
@@ -104,7 +111,7 @@ object CodesPlugin extends AutoPlugin {
     buildVCSNumber := buildVcsNumber(teamcity.value, baseDirectory.value),
     implementationVersion := implementationVer(profile.value, teamcity.value, version.value, buildNumber.value, buildVCSNumber.value),
     versionMessage := tcBuildMetaTask(teamcity.value, implementationVersion.value),
-    developers := None,
+    developers <<= developers ??  None,
     release := {
       def `release/milestone` = profile.value match {
         case ReleaseProfile | MilestoneProfile => true
@@ -130,8 +137,7 @@ object CodesPlugin extends AutoPlugin {
   )
 
   def artefactSettings = Aether.aetherSignedSettings ++ Seq(
-    publish <<= (sbtPlugin, PgpKeys.publishSigned, Aether.deploy) map ((plugin, publish, deploy) =>
-      if (!plugin) deploy else publish),
+    publish <<= Aether.deploy,
     publishLocal <<= PgpKeys.publishLocalSigned,
     packageOptions in(Compile, packageBin) +=
       Package.ManifestAttributes(
@@ -155,19 +161,23 @@ object CodesPlugin extends AutoPlugin {
     }
   )
 
-  def codesSettings = pluginSettings ++ artefactSettings ++ baseProjectSettings
+  def codesSettings: Seq[Setting[_]] = pluginSettings ++ artefactSettings ++ baseProjectSettings
 
   // Used to formalize project name for projects declared with the syntax 'val fooProject = project ...'
   def formalize(name: String): String = name.replaceFirst("sbs", "SBS")
     .split("-|(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")
     .map(_.capitalize).mkString(" ")
 
-  def publishOSS = publishTo <<= release((r) => if (r) Some(sonatypeOSSStaging) else Some(Resolver.sonatypeRepo("snapshots")))
+  def publishOSS(ref: Reference): Setting[Option[Resolver]] = publishTo in ref <<= release((r) => if (r) Some(sonatypeOSSStaging) else Some(Resolver.sonatypeRepo("snapshots")))
 
-  def apacheLicensed = licenses := Seq("Apache 2.0 License" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+  def publishOSS: Setting[Option[Resolver]] = publishOSS(ThisProject)
 
-  def compileOpts = Seq(
-    scalacOptions in(Compile, compile) := {
+  def apacheLicensed(ref: Reference): Setting[Seq[(String, URL)]] = licenses in ref := Seq("Apache 2.0 License" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+  def apacheLicensed: Setting[Seq[(String, URL)]] = apacheLicensed(ThisProject)
+
+  def compileOpts(ref: Reference): Seq[Setting[Task[Seq[String]]]] = Seq(
+    scalacOptions in(ref, Compile, compile) := {
       val opts = (scalacOptions in(Compile, compile)).value ++ Seq(Opts.compile.deprecation, "-feature")
       val devOpts = opts ++ Seq(Opts.compile.unchecked, "–Xlint", "-Xcheckinit")
       profile.value match {
@@ -175,7 +185,7 @@ object CodesPlugin extends AutoPlugin {
         case _ => opts
       }
     },
-    scalacOptions in(Compile, doc) ++= Seq(
+    scalacOptions in(ref, Compile, doc) ++= Seq(
       "-doc-root-content", s"${(scalaSource in(Compile, compile)).value.getPath}/rootdoc.txt",
       s"-doc-title", name.value,
       s"-doc-version", version.value,
@@ -184,6 +194,8 @@ object CodesPlugin extends AutoPlugin {
       "-diagrams"
     )
   )
+
+  def compileOpts: Seq[Setting[Task[Seq[String]]]] = compileOpts(ThisProject)
 
   // Append relevent build implementation information to the version/revision
   private def implementationVer(profile: BuildProfile, teamcity: Boolean, version: String, buildNumber: String, buildVCSNumber: String) =
