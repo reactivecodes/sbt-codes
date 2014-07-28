@@ -1,6 +1,6 @@
 name := "sbt-codes"
 
-version := "0.1.0-SNAPSHOT"
+version := "0.2.0-SNAPSHOT"
 
 organization := "codes.reactive.sbt"
 
@@ -36,6 +36,10 @@ publish <<= PgpKeys.publishSigned
 addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
 
 addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.12.1")
+
+addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.1")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
 
 // Impl
 def developers = {
