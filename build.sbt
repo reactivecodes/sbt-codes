@@ -1,6 +1,6 @@
 name := "sbt-codes"
 
-version := "0.2.0-SNAPSHOT"
+version := "0.3.0"
 
 organization := "codes.reactive.sbt"
 
@@ -27,27 +27,31 @@ publishTo := {
 
 pomIncludeRepository := (_ => false)
 
-pomExtra <<= pomExtra(_ ++ developers)
+pomExtra <<= pomExtra(_ ++ devs)
 
 scalacOptions in Compile += Opts.compile.deprecation
 
 publish <<= PgpKeys.publishSigned
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
+addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 
-addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.12.1")
+addSbtPlugin("no.arktekk.sbt" % "aether-deploy" % "0.16")
 
-addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.1")
+addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.5")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.8.0" )
+
+addSbtPlugin("org.jetbrains.teamcity.plugins" % "sbt-teamcity-logger" % "0.3.0")
 
 // Impl
-def developers = {
+def devs = {
   val developers = Map(
-    "arashi01" -> "Ali Salim Rashid"
+    "arashi01" → "Ali Salim Rashid"
   )
   <developers>
-    {developers map { m =>
+    {developers map { m ⇒
     <developer>
       <id>{m._1}</id>
       <name>{m._2}</name>
